@@ -5,7 +5,6 @@ part of amplify_interface;
 /// be registered and configured and then subsequent API calls will be forwarded
 /// to those plugins.
 class AuthCategory {
-  final errorMsg = "Auth plugin not added correctly";
   const AuthCategory();
   static List<AuthPluginInterface> plugins = [];
 
@@ -15,8 +14,15 @@ class AuthCategory {
     if (plugins.length == 0) {
       plugins.add(plugin);
     } else {
-      throw ("Auth plugin was not added");
+      throw AmplifyException("Auth plugin has already been added, " +
+          "multiple plugins for Auth category are currently not supported.");
     }
+  }
+
+  StreamController get streamController {
+    return plugins.length == 1
+        ? plugins[0].streamController
+        : throw _pluginNotAddedException("Auth");
   }
 
   Future<SignUpResult> signUp(
@@ -25,7 +31,7 @@ class AuthCategory {
         SignUpRequest(username: username, password: password, options: options);
     return plugins.length == 1
         ? plugins[0].signUp(request: request)
-        : throw (errorMsg);
+        : throw _pluginNotAddedException("Auth");
   }
 
   Future<SignUpResult> confirmSignUp(
@@ -38,14 +44,14 @@ class AuthCategory {
         options: options);
     return plugins.length == 1
         ? plugins[0].confirmSignUp(request: request)
-        : throw (errorMsg);
+        : throw _pluginNotAddedException("Auth");
   }
 
   Future<ResendSignUpCodeResult> resendSignUpCode({@required String username}) {
     var request = ResendSignUpCodeRequest(username: username);
     return plugins.length == 1
         ? plugins[0].resendSignUpCode(request: request)
-        : throw (errorMsg);
+        : throw _pluginNotAddedException("Auth");
   }
 
   Future<SignInResult> signIn(
@@ -56,7 +62,7 @@ class AuthCategory {
         SignInRequest(username: username, password: password, options: options);
     return plugins.length == 1
         ? plugins[0].signIn(request: request)
-        : throw (errorMsg);
+        : throw _pluginNotAddedException("Auth");
   }
 
   Future<SignInResult> confirmSignIn(
@@ -65,14 +71,14 @@ class AuthCategory {
         confirmationValue: confirmationValue, options: options);
     return plugins.length == 1
         ? plugins[0].confirmSignIn(request: request)
-        : throw (errorMsg);
+        : throw _pluginNotAddedException("Auth");
   }
 
   Future<SignOutResult> signOut({SignOutOptions options}) {
     var request = SignOutRequest(options: options);
     return plugins.length == 1
         ? plugins[0].signOut(request: request)
-        : throw (errorMsg);
+        : throw _pluginNotAddedException("Auth");
   }
 
   Future<UpdatePasswordResult> updatePassword(
@@ -83,7 +89,7 @@ class AuthCategory {
         oldPassword: oldPassword, newPassword: newPassword, options: options);
     return plugins.length == 1
         ? plugins[0].updatePassword(request: request)
-        : throw (errorMsg);
+        : throw _pluginNotAddedException("Auth");
   }
 
   Future<ResetPasswordResult> resetPassword(
@@ -91,7 +97,7 @@ class AuthCategory {
     var request = ResetPasswordRequest(username: username, options: options);
     return plugins.length == 1
         ? plugins[0].resetPassword(request: request)
-        : throw (errorMsg);
+        : throw _pluginNotAddedException("Auth");
   }
 
   Future<UpdatePasswordResult> confirmPassword(
@@ -106,20 +112,27 @@ class AuthCategory {
         options: options);
     return plugins.length == 1
         ? plugins[0].confirmPassword(request: request)
-        : throw (errorMsg);
+        : throw _pluginNotAddedException("Auth");
   }
 
   Future<AuthUser> getCurrentUser() {
     var request = AuthUserRequest();
     return plugins.length == 1
         ? plugins[0].getCurrentUser(request: request)
-        : throw (errorMsg);
+        : throw _pluginNotAddedException("Auth");
   }
 
   Future<AuthSession> fetchAuthSession({AuthSessionOptions options}) {
     var request = AuthSessionRequest(options: options);
     return plugins.length == 1
         ? plugins[0].fetchAuthSession(request: request)
-        : throw (errorMsg);
+        : throw _pluginNotAddedException("Auth");
+  }
+
+  Future<SignInResult> signInWithWebUI({AuthProvider provider}) {
+    var request = SignInWithWebUIRequest(provider: provider);
+    return plugins.length == 1
+        ? plugins[0].signInWithWebUI(request: request)
+        : throw _pluginNotAddedException("Auth");
   }
 }

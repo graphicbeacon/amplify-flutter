@@ -87,7 +87,7 @@ class _RestApiViewState extends State<RestApiView> {
 
       print("Get SUCCESS");
       print(new String.fromCharCodes(response.data));
-    } on ApiError catch (e) {
+    } on ApiException catch (e) {
       print("Get FAILED");
       print(e.toString());
     }
@@ -130,7 +130,7 @@ class _RestApiViewState extends State<RestApiView> {
 
       print("Head SUCCESS");
       print(new String.fromCharCodes(response.data));
-    } on ApiError catch (e) {
+    } on ApiException catch (e) {
       print("Head FAILED");
       print(e.toString());
     }
@@ -148,7 +148,7 @@ class _RestApiViewState extends State<RestApiView> {
 
       print("Patch SUCCESS");
       print(new String.fromCharCodes(response.data));
-    } on ApiError catch (e) {
+    } on ApiException catch (e) {
       print("Patch FAILED");
       print(e.toString());
     }
@@ -162,31 +162,31 @@ class _RestApiViewState extends State<RestApiView> {
         decoration:
             InputDecoration(border: OutlineInputBorder(), labelText: "apiPath"),
       ),
-      RaisedButton(
-        child: Text("Post"),
+      ElevatedButton(
+        child: const Text("Post"),
         onPressed: onPostPressed,
       ),
-      RaisedButton(
-        child: Text("Put"),
+      ElevatedButton(
+        child: const Text("Put"),
         onPressed: onPutPressed,
       ),
-      RaisedButton(
-        child: Text("Get"),
+      ElevatedButton(
+        child: const Text("Get"),
         onPressed: onGetPressed,
       ),
-      RaisedButton(
-        child: Text("Cancel"),
+      ElevatedButton(
+        child: const Text("Cancel"),
         onPressed: onCancelPressed,
       ),
-      RaisedButton(
-        child: Text("Delete"),
+      ElevatedButton(
+        child: const Text("Delete"),
         onPressed: onDeletePressed,
       ),
-      RaisedButton(
-        child: Text("Head"),
+      ElevatedButton(
+        child: const Text("Head"),
         onPressed: onHeadPressed,
       ),
-      RaisedButton(child: Text("Patch"), onPressed: onPatchPressed),
+      ElevatedButton(child: const Text("Patch"), onPressed: onPatchPressed),
     ]);
   }
 }

@@ -26,6 +26,10 @@ abstract class AuthPluginInterface extends AmplifyPluginInterface {
   /// Constructs a AmplifyPlatform.
   AuthPluginInterface({@required Object token}) : super(token: token);
 
+  StreamController get streamController {
+    throw UnimplementedError('streamController getter has not been implemented.');
+  }
+  
   /// Adds the configuration and return true if it was successful.
   bool addPlugin(AuthPluginInterface configuration) {
     throw UnimplementedError('configure() has not been implemented.');
@@ -76,5 +80,9 @@ abstract class AuthPluginInterface extends AmplifyPluginInterface {
 
   Future<AuthSession> fetchAuthSession({@required AuthSessionRequest request}) {
     throw UnimplementedError('fetchAuthSession() has not been implemented.');
+  }
+
+  Future<SignInResult> signInWithWebUI({SignInWithWebUIRequest request}) {
+    throw UnimplementedError('signInWithWebUI() has not been implemented.');
   }
 }

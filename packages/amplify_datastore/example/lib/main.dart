@@ -47,19 +47,19 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  List<Post> _posts = List();
-  List<Comment> _comments = List();
-  List<Blog> _blogs = List();
-  List<Post> _posts4rating = List();
-  List<Post> _posts1To4Rating = List();
-  List<Post> _postWithCreatedDate = List();
-  List<Post> _posts2Or5Rating = List();
-  List<Post> _postWithIdNotEquals = List();
-  List<Post> _firstPostFromResult = List();
-  List<Post> _allPostsWithoutRating2Or5 = List();
-  List<String> _postStreamingData = List();
-  List<String> _blogStreamingData = List();
-  List<String> _commentStreamingData = List();
+  List<Post> _posts = <Post>[];
+  List<Comment> _comments = <Comment>[];
+  List<Blog> _blogs = <Blog>[];
+  List<Post> _posts4rating = <Post>[];
+  List<Post> _posts1To4Rating = <Post>[];
+  List<Post> _postWithCreatedDate = <Post>[];
+  List<Post> _posts2Or5Rating = <Post>[];
+  List<Post> _postWithIdNotEquals = <Post>[];
+  List<Post> _firstPostFromResult = <Post>[];
+  List<Post> _allPostsWithoutRating2Or5 = <Post>[];
+  List<String> _postStreamingData = <String>[];
+  List<String> _blogStreamingData = <String>[];
+  List<String> _commentStreamingData = <String>[];
   bool _isAmplifyConfigured = false;
   String _queriesToView = "Post"; //default view
   Blog _selectedBlogForNewPost;
@@ -67,6 +67,7 @@ class _MyAppState extends State<MyApp> {
   Stream<SubscriptionEvent<Post>> postStream;
   Stream<SubscriptionEvent<Blog>> blogStream;
   Stream<SubscriptionEvent<Comment>> commentStream;
+  StreamSubscription hubSubscription;
   bool _listeningToHub = true;
   AmplifyDataStore datastorePlugin;
 
@@ -90,10 +91,10 @@ class _MyAppState extends State<MyApp> {
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initPlatformState() async {
     datastorePlugin = AmplifyDataStore(modelProvider: ModelProvider.instance);
-    listenToHub();
     await Amplify.addPlugin(datastorePlugin);
     // Configure
     await Amplify.configure(amplifyconfig);
+    listenToHub();
 
     // setup streams
     postStream = Amplify.DataStore.observe(Post.classType);
@@ -135,35 +136,35 @@ class _MyAppState extends State<MyApp> {
   }
 
   void listenToHub() {
-    AmplifyDataStore.events.listenToDataStore((msg) {
-      if (msg["eventName"] == "ready") {
-        runQueries();
-      }
-      print(msg);
-    });
     setState(() {
+      hubSubscription = Amplify.Hub.listen([HubChannel.DataStore], (msg) {
+        if (msg.eventName == "ready") {
+          runQueries();
+        }
+        print(msg);
+      });
       _listeningToHub = true;
     });
   }
 
   void stopListeningToHub() {
-    AmplifyDataStore.events.stopListeningToDataStore();
+    hubSubscription.cancel();
     setState(() {
       _listeningToHub = false;
     });
   }
 
   void runQueries() async {
-    List<Post> allPosts = List();
-    List<Comment> allComments = List();
-    List<Blog> allBlogs = List();
-    List<Post> posts4Rating = List();
-    List<Post> posts1To4Rating = List();
-    List<Post> posts2Or5Rating = List();
-    List<Post> postWithCreatedDate = List();
-    List<Post> postWithIdNotEquals = List();
-    List<Post> firstPostFromResult = List();
-    List<Post> allPostsWithoutRating2Or5 = List();
+    List<Post> allPosts = <Post>[];
+    List<Comment> allComments = <Comment>[];
+    List<Blog> allBlogs = <Blog>[];
+    List<Post> posts4Rating = <Post>[];
+    List<Post> posts1To4Rating = <Post>[];
+    List<Post> posts2Or5Rating = <Post>[];
+    List<Post> postWithCreatedDate = <Post>[];
+    List<Post> postWithIdNotEquals = <Post>[];
+    List<Post> firstPostFromResult = <Post>[];
+    List<Post> allPostsWithoutRating2Or5 = <Post>[];
 
     // get all comments
     (await Amplify.DataStore.query(Comment.classType)).forEach((element) {

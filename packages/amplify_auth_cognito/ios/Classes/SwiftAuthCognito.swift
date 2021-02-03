@@ -19,41 +19,18 @@ import Amplify
 import AmplifyPlugins
 import AWSCore
 
-public class SwiftAuthCognito: NSObject, FlutterPlugin, FlutterStreamHandler {
+public class SwiftAuthCognito: NSObject, FlutterPlugin {
     
     private var authEventSink: FlutterEventSink?
     private var token: UnsubscribeToken?
     private let cognito: AuthCognitoBridge
+    private let authCognitoHubEventStreamHandler: AuthCognitoHubEventStreamHandler?
+    var errorHandler = AuthErrorHandler()
     
-    init(cognito: AuthCognitoBridge = AuthCognitoBridge()) {
+    init(cognito: AuthCognitoBridge = AuthCognitoBridge(),
+         authCognitoHubEventStreamHandler: AuthCognitoHubEventStreamHandler = AuthCognitoHubEventStreamHandler()) {
         self.cognito = cognito
-    }
-    
-    public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
-        token = Amplify.Hub.listen(to: .auth) { payload in
-            switch payload.eventName {
-            case HubPayload.EventName.Auth.signedIn:
-                let hubEvent: Dictionary<String, Any> = ["eventName" : "SIGNED_IN"]
-                events(hubEvent)
-            case HubPayload.EventName.Auth.sessionExpired:
-                let hubEvent: Dictionary<String, Any> = ["eventName" : "SESSION_EXPIRED"]
-                events(hubEvent)
-            case HubPayload.EventName.Auth.signedOut:
-                let hubEvent: Dictionary<String, Any> = ["eventName" : "SIGNED_OUT"]
-                events(hubEvent)
-            default:
-                break
-            }
-        }
-        return nil
-    }
-    
-    public func onCancel(withArguments arguments: Any?) -> FlutterError? {
-        if (token != nil) {
-            Amplify.Hub.removeListener(token!)
-        }
-        self.authEventSink = nil
-        return nil
+        self.authCognitoHubEventStreamHandler = authCognitoHubEventStreamHandler
     }
     
     public static func register(with registrar: FlutterPluginRegistrar) {
@@ -62,7 +39,7 @@ public class SwiftAuthCognito: NSObject, FlutterPlugin, FlutterStreamHandler {
         let instance = SwiftAuthCognito()
         registrar.addMethodCallDelegate(instance, channel: channel)
         let authPlugin = AWSCognitoAuthPlugin()
-        eventChannel.setStreamHandler(instance)
+        eventChannel.setStreamHandler(instance.authCognitoHubEventStreamHandler)
         Amplify.Logging.logLevel = .error
         do {
             try Amplify.add(plugin: authPlugin)
@@ -73,14 +50,14 @@ public class SwiftAuthCognito: NSObject, FlutterPlugin, FlutterStreamHandler {
     
     private func checkArguments(args: Any) throws -> Dictionary<String, AnyObject> {
         guard let res = args as? Dictionary<String, AnyObject> else {
-            throw AuthError.validation("arguments", "Flutter method call arguments are not a map.", "Check the values that are being passed from Dart.")
+            throw AmplifyFlutterValidationException(errorDescription:  "Flutter method call arguments.data is not a map.", recoverySuggestion: "Check the values that are being passed from Dart.")
         }
         return res;
     }
     
     private func checkData(args: Dictionary<String, AnyObject>) throws -> NSMutableDictionary {
         guard let res = args["data"] as? NSMutableDictionary else {
-            throw AuthError.validation("arguments", "Flutter method call arguments.data is not a map.", "Check the values that are being passed from Dart.")
+            throw AmplifyFlutterValidationException(errorDescription:  "Flutter method call arguments.data is not a map.", recoverySuggestion: "Check the values that are being passed from Dart.")
         }
         return res;
     }
@@ -92,88 +69,95 @@ public class SwiftAuthCognito: NSObject, FlutterPlugin, FlutterStreamHandler {
             try arguments = checkArguments(args: call.arguments as Any)
             try data = checkData(args: arguments)
         } catch {
-            return prepareError(flutterResult: result,  msg: FlutterAuthErrorMessage.MALFORMED.rawValue, errorMap: formatErrorMap(errorCode: "validation"))
+            self.errorHandler.prepareGenericException(flutterResult: result, underlyingError: error)
         }
         switch call.method {
         case "signUp":
-            if (FlutterSignUpRequest.validate(dict: data)) {
+            do {
+                try FlutterSignUpRequest.validate(dict: data)
                 let request = FlutterSignUpRequest(dict: data)
                 cognito.onSignUp(flutterResult: result, request: request)
-            } else {
-                let errorCode = "UNKNOWN"
-                prepareError(flutterResult: result,  msg: FlutterAuthErrorMessage.MALFORMED.rawValue, errorMap: formatErrorMap(errorCode: errorCode))
+            } catch {
+                self.errorHandler.prepareGenericException(flutterResult: result, underlyingError: error)
             }
         case "confirmSignUp":
-            if (FlutterConfirmSignUpRequest.validate(dict: data)) {
+            do {
+                try FlutterConfirmSignUpRequest.validate(dict: data)
                 let request = FlutterConfirmSignUpRequest(dict: data)
                 cognito.onConfirmSignUp(flutterResult: result, request: request)
-            } else {
-                let errorCode = "UNKNOWN"
-                prepareError(flutterResult: result,  msg: FlutterAuthErrorMessage.MALFORMED.rawValue, errorMap: formatErrorMap(errorCode: errorCode))
+            } catch {
+                self.errorHandler.prepareGenericException(flutterResult: result, underlyingError: error)
             }
         case "resendSignUpCode":
-            if (FlutterResendSignUpCodeRequest.validate(dict: data)) {
+            do {
+                try FlutterResendSignUpCodeRequest.validate(dict: data)
                 let request = FlutterResendSignUpCodeRequest(dict: data)
                 cognito.onResendSignUpCode(flutterResult: result, request: request)
-            } else {
-                let errorCode = "UNKNOWN"
-                prepareError(flutterResult: result,  msg: FlutterAuthErrorMessage.MALFORMED.rawValue, errorMap: formatErrorMap(errorCode: errorCode))
+            } catch {
+                self.errorHandler.prepareGenericException(flutterResult: result, underlyingError: error)
             }
         case "signIn":
-            if (FlutterSignInRequest.validate(dict: data)) {
+            do {
+                try FlutterSignInRequest.validate(dict: data)
                 let request = FlutterSignInRequest(dict: data)
                 cognito.onSignIn(flutterResult: result, request: request)
-            } else {
-                let errorCode = "UNKNOWN"
-                prepareError(flutterResult: result,  msg: FlutterAuthErrorMessage.MALFORMED.rawValue, errorMap: formatErrorMap(errorCode: errorCode))
+            } catch {
+                self.errorHandler.prepareGenericException(flutterResult: result, underlyingError: error)
             }
         case "confirmSignIn":
-            if (FlutterConfirmSignInRequest.validate(dict: data)) {
+            do {
+                try FlutterConfirmSignInRequest.validate(dict: data)
                 let request = FlutterConfirmSignInRequest(dict: data)
                 cognito.onConfirmSignIn(flutterResult: result, request: request)
-            } else {
-                let errorCode = "UNKNOWN"
-                prepareError(flutterResult: result,  msg: FlutterAuthErrorMessage.MALFORMED.rawValue, errorMap: formatErrorMap(errorCode: errorCode))
+            } catch {
+                self.errorHandler.prepareGenericException(flutterResult: result, underlyingError: error)
             }
         case "signOut":
             let request = FlutterSignOutRequest(dict: data)
             cognito.onSignOut(flutterResult: result, request: request)
         case "updatePassword":
-            if (FlutterUpdatePasswordRequest.validate(dict: data)) {
-                let  request = FlutterUpdatePasswordRequest(dict: data)
+            do {
+                try FlutterUpdatePasswordRequest.validate(dict: data)
+                let request = FlutterUpdatePasswordRequest(dict: data)
                 cognito.onUpdatePassword(flutterResult: result, request: request)
-            } else {
-                let errorCode = "UNKNOWN"
-                prepareError(flutterResult: result,  msg: FlutterAuthErrorMessage.MALFORMED.rawValue, errorMap: formatErrorMap(errorCode: errorCode))
+            } catch {
+                self.errorHandler.prepareGenericException(flutterResult: result, underlyingError: error)
             }
         case "resetPassword":
-            if (FlutterResetPasswordRequest.validate(dict: data)) {
+            do {
+                try FlutterResetPasswordRequest.validate(dict: data)
                 let request = FlutterResetPasswordRequest(dict: data)
                 cognito.onResetPassword(flutterResult: result, request: request)
-            } else {
-                let errorCode = "UNKNOWN"
-                prepareError(flutterResult: result,  msg: FlutterAuthErrorMessage.MALFORMED.rawValue, errorMap: formatErrorMap(errorCode: errorCode))
+            } catch {
+                self.errorHandler.prepareGenericException(flutterResult: result, underlyingError: error)
             }
         case "confirmPassword":
-            if (FlutterConfirmPasswordRequest.validate(dict: data)) {
+            do {
+                try FlutterConfirmPasswordRequest.validate(dict: data)
                 let request = FlutterConfirmPasswordRequest(dict: data)
                 cognito.onConfirmPassword(flutterResult: result, request: request)
-            } else {
-                let errorCode = "UNKNOWN"
-                prepareError(flutterResult: result,  msg: FlutterAuthErrorMessage.MALFORMED.rawValue, errorMap: formatErrorMap(errorCode: errorCode))
+            } catch {
+                self.errorHandler.prepareGenericException(flutterResult: result, underlyingError: error)
             }
         case "fetchAuthSession":
             let request = FlutterFetchSessionRequest(dict: data)
             cognito.onFetchSession(flutterResult: result, request: request)
         case "getCurrentUser":
             cognito.onGetCurrentUser(flutterResult: result)
+        case "signInWithWebUI":
+            do {
+                try FlutterSignInWithWebUIRequest.validate(dict: data)
+                let request = FlutterSignInWithWebUIRequest(dict: data)
+                if request.provider == nil {
+                    cognito.onSignInWithWebUI(flutterResult: result)
+                } else {
+                    cognito.onSignInWithSocialWebUI(flutterResult: result, request: request)
+                }
+            } catch {
+                self.errorHandler.prepareGenericException(flutterResult: result, underlyingError: error)
+            }
         default:
             result(FlutterMethodNotImplemented)
-        }
-    }
-    static func logErrorContents(messages: Array<String>) {
-        messages.forEach {
-            log.error($0)
         }
     }
 }

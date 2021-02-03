@@ -17,9 +17,8 @@ import 'package:amplify_datastore/amplify_datastore.dart';
 import 'package:amplify_datastore_plugin_interface/amplify_datastore_plugin_interface.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:amplify_core/test_utils/get_json_from_file.dart';
 import './test_models/Post.dart';
-import './utils/get_json_from_file.dart';
 import 'test_models/ModelProvider.dart';
 
 void main() {
@@ -37,7 +36,7 @@ void main() {
     dataStoreChannel.setMockMethodCallHandler(null);
   });
 
-  test('delete with a valid model executes without an error ', () async {
+  test('delete with a valid model executes without an exception ', () async {
     var json =
         await getJsonFromFile('delete_api/request/instance_no_predicate.json');
     var model = json['serializedModel'];
@@ -52,37 +51,24 @@ void main() {
   });
 
   test(
-      'A PlatformException for a failed API call results in the corresponding DataStoreError',
+      'A PlatformException for a failed API call results in the corresponding DataStoreException',
       () async {
     dataStoreChannel.setMockMethodCallHandler((MethodCall methodCall) async {
-      throw PlatformException(
-          code: 'AMPLIFY_EXCEPTION',
-          message: 'AMPLIFY_DATASTORE_DELETE_FAILED',
-          details: {});
+      throw PlatformException(code: 'DataStoreException', details: {
+        'message': 'Delete failed for whatever known reason',
+        'recoverySuggestion': 'some insightful suggestion',
+        'underlyingException': 'Act of God'
+      });
     });
     expect(
         () => dataStore.delete(Post(
             title: 'test title', id: '4281dfba-96c8-4a38-9a8e-35c7e893ea47')),
-        throwsA(isA<DataStoreError>().having((error) => error.cause,
-            'error message', 'AMPLIFY_DATASTORE_DELETE_FAILED')));
-  });
-
-  test(
-      'An unrecognized PlatformException results in the corresponding DataStoreError',
-      () async {
-    dataStoreChannel.setMockMethodCallHandler((MethodCall methodCall) async {
-      throw PlatformException(
-          code: 'AMPLIFY_EXCEPTION',
-          message: 'An unrecognized message',
-          details: {});
-    });
-    expect(
-        () => dataStore.delete(Post(
-            title: 'test title', id: '4281dfba-96c8-4a38-9a8e-35c7e893ea47')),
-        throwsA(isA<DataStoreError>().having(
-          (error) => error.cause,
-          'error message',
-          'UNRECOGNIZED_DATASTORE_ERROR',
-        )));
+        throwsA(isA<DataStoreException>()
+            .having((exception) => exception.message, 'message',
+                'Delete failed for whatever known reason')
+            .having((exception) => exception.recoverySuggestion,
+                'recoverySuggestion', 'some insightful suggestion')
+            .having((exception) => exception.underlyingException,
+                'underlyingException', 'Act of God')));
   });
 }

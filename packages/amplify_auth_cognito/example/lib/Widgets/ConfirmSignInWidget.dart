@@ -1,7 +1,8 @@
-import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
+import 'package:amplify_core/amplify_core.dart';
 import 'package:amplify_flutter/amplify.dart';
 import 'package:flutter/material.dart';
 
+// ignore_for_file: public_member_api_docs
 class ConfirmSignInWidget extends StatefulWidget {
   final Function showResult;
   final Function changeDisplay;
@@ -21,13 +22,13 @@ class _ConfirmSignInWidgetState extends State<ConfirmSignInWidget> {
 
   void _confirmSignIn() async {
     try {
-      SignInResult res = await Amplify.Auth.confirmSignIn(
+      var res = await Amplify.Auth.confirmSignIn(
           confirmationValue: confirmationCodeController.text.trim());
-      widget.showResult("Confirm Sign In Status = " + res.nextStep.signInStep);
-      widget.changeDisplay(res.nextStep.signInStep == "DONE"
-          ? "SIGNED_IN"
-          : "SHOW_CONFIRM_SIGN_IN");
-    } on AuthError catch (e) {
+      widget.showResult('Confirm Sign In Status = ' + res.nextStep.signInStep);
+      widget.changeDisplay(res.nextStep.signInStep == 'DONE'
+          ? 'SIGNED_IN'
+          : 'SHOW_CONFIRM_SIGN_IN');
+    } on AmplifyException catch (e) {
       widget.setError(e);
     }
   }
@@ -50,12 +51,12 @@ class _ConfirmSignInWidgetState extends State<ConfirmSignInWidget> {
                     labelText: 'Challange Response *',
                   )),
               const Padding(padding: EdgeInsets.all(10.0)),
-              RaisedButton(
+              ElevatedButton(
                 onPressed: _confirmSignIn,
                 child: const Text('Confirm SignIn'),
               ),
               const Padding(padding: EdgeInsets.all(10.0)),
-              RaisedButton(
+              ElevatedButton(
                 key: Key('goto-signin-button'),
                 onPressed: widget.backToSignIn,
                 child: const Text('Back to Sign In'),

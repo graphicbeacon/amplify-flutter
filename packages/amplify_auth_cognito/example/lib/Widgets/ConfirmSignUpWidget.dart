@@ -1,7 +1,8 @@
-import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
+import 'package:amplify_core/amplify_core.dart';
 import 'package:amplify_flutter/amplify.dart';
 import 'package:flutter/material.dart';
 
+// ignore_for_file: public_member_api_docs
 class ConfirmSignUpWidget extends StatefulWidget {
   final Function showResult;
   final Function changeDisplay;
@@ -21,25 +22,25 @@ class _ConfirmSignUpWidgetState extends State<ConfirmSignUpWidget> {
 
   void _confirmSignUp() async {
     try {
-      SignUpResult res = await Amplify.Auth.confirmSignUp(
+      var res = await Amplify.Auth.confirmSignUp(
           username: usernameController.text.trim(),
           confirmationCode: confirmationCodeController.text.trim());
-      widget.showResult("Confirm Sign Up Status = " + res.nextStep.signUpStep);
+      widget.showResult('Confirm Sign Up Status = ' + res.nextStep.signUpStep);
       widget.changeDisplay(
-          res.nextStep.signUpStep != "DONE" ? "SHOW_CONFIRM" : "SHOW_SIGN_IN");
-    } on AuthError catch (e) {
+          res.nextStep.signUpStep != 'DONE' ? 'SHOW_CONFIRM' : 'SHOW_SIGN_IN');
+    } on AmplifyException catch (e) {
       widget.setError(e);
     }
   }
 
   void _resendSignUpCode() async {
     try {
-      ResendSignUpCodeResult res = await Amplify.Auth.resendSignUpCode(
+      var res = await Amplify.Auth.resendSignUpCode(
         username: usernameController.text.trim(),
       );
       widget.showResult(
-          "Sign Up Code Resent to " + res.codeDeliveryDetails.destination);
-    } on AuthError catch (e) {
+          'Sign Up Code Resent to ' + res.codeDeliveryDetails.destination);
+    } on AmplifyException catch (e) {
       widget.setError(e);
     }
   }
@@ -72,18 +73,18 @@ class _ConfirmSignUpWidgetState extends State<ConfirmSignUpWidget> {
                     labelText: 'Confirmation Code *',
                   )),
               const Padding(padding: EdgeInsets.all(10.0)),
-              RaisedButton(
+              ElevatedButton(
                 key: Key('confirm-user-button'),
                 onPressed: _confirmSignUp,
                 child: const Text('Confirm SignUp'),
               ),
               const Padding(padding: EdgeInsets.all(10.0)),
-              RaisedButton(
+              ElevatedButton(
                 onPressed: _resendSignUpCode,
                 child: const Text('ResendCode'),
               ),
               const Padding(padding: EdgeInsets.all(10.0)),
-              RaisedButton(
+              ElevatedButton(
                 key: Key('goto-signin-button'),
                 onPressed: widget.backToSignIn,
                 child: const Text('Back to Sign In'),

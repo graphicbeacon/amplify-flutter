@@ -20,7 +20,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import './method_channel_auth_cognito.dart';
-import './event_channel_auth_cognito.dart';
+import './amplify_auth_cognito_stream_controller.dart';
 
 export './src/types.dart';
 export 'package:amplify_auth_plugin_interface/src/types.dart';
@@ -32,11 +32,16 @@ class AmplifyAuthCognito extends AuthPluginInterface {
   AmplifyAuthCognito() : super(token: _token);
 
   static AmplifyAuthCognito _instance = AmplifyAuthCognitoMethodChannel();
-  var events = AmplifyAuthCognitoEventChannel();
+  static AuthStreamController streamWrapper = AuthStreamController();
+
 
   static set instance(AuthPluginInterface instance) {
     PlatformInterface.verifyToken(instance, _token);
     _instance = instance;
+  }
+
+  StreamController get streamController {
+    return streamWrapper.authStreamController;
   }
 
   Future<SignUpResult> signUp({@required SignUpRequest request}) async {
@@ -98,5 +103,10 @@ class AmplifyAuthCognito extends AuthPluginInterface {
   Future<AuthSession> fetchAuthSession({AuthSessionRequest request}) async {
     final res = await _instance.fetchAuthSession(request: request);
     return res;
+  }
+
+  Future<SignInResult> signInWithWebUI({SignInWithWebUIRequest request}) async {
+    final res = await _instance.signInWithWebUI(request: request);
+    return res; 
   }
 }

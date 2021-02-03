@@ -33,8 +33,8 @@ class _LandingPageState extends State<LandingPage> {
         context: context,
         child: new SimpleDialog(title: Text(text), children: [
           dialogWidget,
-          RaisedButton(
-            child: Text("Cancel"),
+          ElevatedButton(
+            child: const Text("Cancel"),
             onPressed: () {
               Navigator.pop(context, false);
             },
@@ -47,7 +47,7 @@ class _LandingPageState extends State<LandingPage> {
   // dialogWidget must return true or false
   Widget openDialogButton(
       String text, Function onSuccess, Widget dialogWidget) {
-    return RaisedButton(
+    return ElevatedButton(
         child: Text(text),
         onPressed: () {
           _showDialogForResult(text, onSuccess, dialogWidget);
